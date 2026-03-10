@@ -63,7 +63,7 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    applicationContext = binding.getApplicationContext();
+    applicationContext = flutterPluginBinding.getApplicationContext();
     usbManager = (UsbManager) flutterPluginBinding.getApplicationContext().getSystemService(Context.USB_SERVICE);
 
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
