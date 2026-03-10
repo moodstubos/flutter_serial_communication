@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.flutter.Log;
-import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -58,8 +57,10 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   private boolean purgeWriteBuffers = false;
   private boolean purgeReadBuffers = false;
 
-  private FlutterActivity activity;
   private Context applicationContext;
+
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
   
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -300,9 +301,9 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
         );
       }
 
-      PendingIntent usbGrantIntent = PendingIntent.getBroadcast(activity,
+      PendingIntent usbGrantIntent = PendingIntent.getBroadcast(applicationContext,
         0,
-        new Intent(PluginConfig.INTENT_ACTION_GRANT_USB).setPackage(activity.getPackageName()),
+        new Intent(PluginConfig.INTENT_ACTION_GRANT_USB).setPackage(applicationContext.getPackageName()),
         flags);
 
       usbManager.requestPermission(driver.getDevice(), usbGrantIntent);
@@ -371,14 +372,15 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
 
   @Override
   public void onNewData(byte[] data) {
-    activity.runOnUiThread(() -> {
+   
+    mainHandler.post(() -> {  
       serialMessageHandler.success(data);
     });
   }
 
   @Override
   public void onRunError(Exception e) {
-    activity.runOnUiThread(() -> {
+    mainHandler.post(() -> {
       disconnect();
     });
   }
