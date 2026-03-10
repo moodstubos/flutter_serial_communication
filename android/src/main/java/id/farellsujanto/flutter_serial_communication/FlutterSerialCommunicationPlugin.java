@@ -59,9 +59,11 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   private boolean purgeReadBuffers = false;
 
   private FlutterActivity activity;
-
+  private Context applicationContext;
+  
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+    applicationContext = binding.getApplicationContext();
     usbManager = (UsbManager) flutterPluginBinding.getApplicationContext().getSystemService(Context.USB_SERVICE);
 
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),
@@ -188,12 +190,13 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
     usbManager = null;
+    applicationContext = null;
   }
 
   @Override
   public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
-    activity = (FlutterActivity) binding.getActivity();
-    usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
+    // activity = (FlutterActivity) binding.getActivity();
+    // usbManager = (UsbManager) activity.getSystemService(Context.USB_SERVICE);
     // TODO: Application cold started by an ACTION_USB_DEVICE_ATTACHED intent - propagate to Flutter?
     // TODO: For example connect to the device:
     // Intent intent = activity.getIntent();
@@ -285,13 +288,13 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
           ? PendingIntent.FLAG_MUTABLE : 0;
       usbGrantReceiver = new USBGrantReceiver(this);
       if (Build.VERSION.SDK_INT >= 34) {
-        activity.registerReceiver(
+        applicationContext.registerReceiver(
           usbGrantReceiver,
           new IntentFilter(PluginConfig.INTENT_ACTION_GRANT_USB),
           Context.RECEIVER_NOT_EXPORTED // this is correct, but android studio seems to have issues recognizing.
         );
       } else {
-        activity.registerReceiver(
+        applicationContext.registerReceiver(
           usbGrantReceiver,
           new IntentFilter(PluginConfig.INTENT_ACTION_GRANT_USB)
         );
@@ -359,7 +362,7 @@ public class FlutterSerialCommunicationPlugin implements FlutterPlugin, MethodCa
       connectResult = null;
     }
     if(usbGrantReceiver != null) {
-      activity.unregisterReceiver(usbGrantReceiver);
+      applicationContext.unregisterReceiver(usbGrantReceiver);
       usbGrantReceiver = null;
     }
   }
